@@ -30,11 +30,7 @@ services:
       - mysql
 
   mysql:
-    image: mariadb
-    ports:
-      - "3306:3306"
-    volumes:
-      - ./data/mysql/data:/var/lib/mysql:rw
+    image: percona:8.0
     environment:
       MYSQL_ROOT_PASSWORD: blahblahblah
       MYSQL_DATABASE: looker

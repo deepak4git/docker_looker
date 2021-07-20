@@ -2,9 +2,9 @@ FROM ubuntu:latest
 # The ubuntu:latest tag points to the "latest LTS"
 # We use Ubuntu Linux (LTS releases) for our internal Looker hosting, and recommend it for customers who do not have a Linux preference.
 
-ARG LOOKER_VERSION="6.14"
-ARG LOOKER_LICENSE_KEY="REPLACE-WITH-LOOKER-LICENSE-KEY"
-ARG LOOKER_LICENSE_EMAIL="your.company@email.com"
+ARG LOOKER_VERSION="21.12.7"
+ARG LOOKER_LICENSE_KEY="BE17-BCF6-CAB6-0F89-9D7B"
+ARG LOOKER_LICENSE_EMAIL="deepak.kumar@coupa.com"
 
 RUN echo "[INFO]::[installing]::[base packages]" \
     && ln -snf /usr/share/zoneinfo/America/Los_Angeles /etc/localtime && echo "America/Los_Angeles" > /etc/timezone \
@@ -29,14 +29,13 @@ RUN echo "[INFO]::[configure]::[misc]" \
     && echo "looker     hard     nofile     8192" | tee -a /etc/launchd.conf \
     && echo '%looker ALL=(ALL) NOPASSWD:ALL' | tee -a /etc/sudoers
 
-RUN echo "[INFO]::[download]::[looker]" \
-    && mkdir -p /home/looker/looker \
-    && curl -X POST -H 'Content-Type: application/json' \
-    -d '{"lic": "'${LOOKER_LICENSE_KEY}'", "email": "'${LOOKER_LICENSE_EMAIL}'", "latest": "specific", "specific": "looker-'${LOOKER_VERSION}'-latest.jar"}' \
-    https://apidownload.looker.com/download | jq .url | xargs curl -o /home/looker/looker/looker.jar
 
-RUN echo "[INFO]::[install]::[looker]" \
-    && curl -o /home/looker/looker/looker-service https://raw.githubusercontent.com/looker/customer-scripts/master/startup_scripts/looker
+COPY config/looker.jar /home/looker/looker/
+COPY config/looker-dependencies.jar /home/looker/looker/
+
+
+RUN set -a && \
+  curl https://raw.githubusercontent.com/looker/customer-scripts/master/startup_scripts/looker > /home/looker/looker/looker-service
 
 COPY ./config /tmp/build-configs
 
@@ -62,6 +61,9 @@ RUN chown -R looker:looker /srv/data
 USER looker
 
 EXPOSE 9999
+
+ENV API_PORT 19999
+EXPOSE 19999
 
 ENTRYPOINT ["/tini", "--"]
 

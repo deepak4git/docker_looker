@@ -4,3 +4,4 @@ username: looker
 password: bleepbloop
 database: looker
 port: 3306
+ssl: true

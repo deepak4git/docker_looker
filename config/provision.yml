@@ -1,7 +1,7 @@
-license_key: "REPLACE-WITH-YOUR-LICENSE-KEY"
+license_key: "BE17-BCF6-CAB6-0F89-9D7B"
 host_url: "http://localhost"
 user:
-  first_name: "Old"
-  last_name: "Greg"
-  email: "old.greg@looker.com"
+  first_name: "deepak"
+  last_name: "kumar"
+  email: "deepak.kumar@coupa.com"
   password: "password-678$#-LOCAL-testing"
