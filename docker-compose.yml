@@ -1,4 +1,4 @@
-version: "2.1"
+version: "3.4"
 
 services:
   lb:
@@ -30,10 +30,14 @@ services:
       - mysql
 
   mysql:
-    image: percona:8.0
+    image: mariadb
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./data/mysql/data:/var/lib/mysql:rw
     environment:
-      MYSQL_ROOT_PASSWORD: blahblahblah
-      MYSQL_DATABASE: looker
-      MYSQL_USER: looker
-      MYSQL_PASSWORD: bleepbloop
-      MYSQL_ALLOW_EMPTY_PASSWORD: 0
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ALLOW_EMPTY_PASSWORD: ${MYSQL_ALLOW_EMPTY_PASSWORD}

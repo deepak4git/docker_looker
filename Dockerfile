@@ -62,8 +62,6 @@ USER looker
 
 EXPOSE 9999
 
-ENV API_PORT 19999
-EXPOSE 19999
 
 ENTRYPOINT ["/tini", "--"]
 
