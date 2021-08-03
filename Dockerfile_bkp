@@ -9,28 +9,14 @@ ARG LOOKER_VERSION="21.12.7"
 ARG LOOKER_LICENSE_KEY="BE17-BCF6-CAB6-0F89-9D7B"
 ARG LOOKER_LICENSE_EMAIL="deepak.kumar@coupa.com"
 
-ENV PHANTOMJS_VERSION=2.1.1
-
-RUN echo "[INFO]::p[installing]::[phantomjs" \
-    && apk update \
-    && apk add bash \
-    && apk --update add ttf-ubuntu-font-family fontconfig \
-    && apk add --no-cache curl && \
-    cd /tmp && curl -Ls https://github.com/dustinblackman/phantomized/releases/download/${PHANTOMJS_VERSION}/dockerized-phantomjs.tar.gz | tar xz && \
-    cp -R lib lib64 / && \
-    cp -R usr/lib/x86_64-linux-gnu /usr/lib && \
-    cp -R usr/share /usr/share && \
-    cp -R etc/fonts /etc && \
-    curl -k -Ls https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-${PHANTOMJS_VERSION}-linux-x86_64.tar.bz2 | tar -jxf - && \
-    cp phantomjs-${PHANTOMJS_VERSION}-linux-x86_64/bin/phantomjs /usr/local/bin/phantomjs && \
-    rm -fR phantomjs-${PHANTOMJS_VERSION}-linux-x86_64
-    
 RUN echo "[INFO]::[installing]::[base packages]" \
     && ln -snf /usr/share/zoneinfo/America/Los_Angeles /etc/localtime && echo "America/Los_Angeles" > /etc/timezone \
-    && apk update \
-    && apk add --no-cache libressl-dev libmcrypt-dev openssl ca-certificates \
-    git git openntpd curl tzdata bzip2 libstdc++ libx11 libxrender libxext fontconfig freetype ttf-dejavu ttf-droid \
-    chromium openjdk8 ttf-freefont ttf-ubuntu-font-family ttf-liberation libressl-dev  mysql-client jq \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends --no-install-suggests \
+    software-properties-common libssl-dev libmcrypt-dev openssl ca-certificates \
+    git ntp curl tzdata bzip2 libfontconfig1 phantomjs mysql-client sudo jq \
+    fonts-freefont-otf chromium-browser openjdk-8-jdk \
+    && apt-get autoclean && apt-get clean && apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/* \
     && alias chromium='chromium-browser' && sudo ln -s /usr/bin/chromium-browser /usr/bin/chromium
 
 RUN echo "[INFO]::[configure]::[misc]" \
@@ -38,8 +24,8 @@ RUN echo "[INFO]::[configure]::[misc]" \
     && echo "net.ipv4.tcp_keepalive_time=200" | tee -a /etc/sysctl.conf \
     && echo "net.ipv4.tcp_keepalive_intvl=200" | tee -a /etc/sysctl.conf \
     && echo "net.ipv4.tcp_keepalive_probes=5" | tee -a /etc/sysctl.conf \
-    && addgroup -g 1002 "looker" ||  true \
-    && adduser -u 1002 -S "looker" -G "looker" || true\
+    && groupadd -g 1002 "looker" ||  true \
+    && useradd -m  -u 1002 -g "looker" "looker" || true\
     && cp /etc/launchd.conf /etc/launchd.conf.dist || true \
     && echo "limit      maxfiles 8192 8192"     | tee -a /etc/launchd.conf \
     && echo "looker     soft     nofile     8192" | tee -a /etc/launchd.conf \
