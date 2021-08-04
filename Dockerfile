@@ -28,7 +28,7 @@ RUN echo "[INFO]::p[installing]::[phantomjs" \
 RUN echo "[INFO]::[installing]::[base packages]" \
     && ln -snf /usr/share/zoneinfo/America/Los_Angeles /etc/localtime && echo "America/Los_Angeles" > /etc/timezone \
     && apk update \
-    && apk add --no-cache libressl-dev libmcrypt-dev openssl ca-certificates \
+    && apk add --no-cache libressl-dev libmcrypt-dev ca-certificates \
     git git openntpd curl tzdata bzip2 libstdc++ libx11 libxrender libxext fontconfig freetype ttf-dejavu ttf-droid \
     chromium openjdk8 ttf-freefont ttf-ubuntu-font-family ttf-liberation libressl-dev  mysql-client jq \
     && alias chromium='chromium-browser' && sudo ln -s /usr/bin/chromium-browser /usr/bin/chromium
