@@ -5,9 +5,9 @@ FROM 899991151204.dkr.ecr.us-east-1.amazonaws.com/alpine:latest
 # We use Ubuntu Linux (LTS releases) for our internal Looker hosting, and recommend it for customers who do not have a Linux preference.
 USER root
 RUN whoami
-ARG LOOKER_VERSION="21.12.7"
-ARG LOOKER_LICENSE_KEY="BE17-BCF6-CAB6-0F89-9D7B"
-ARG LOOKER_LICENSE_EMAIL="deepak.kumar@coupa.com"
+ENV LOOKER_VERSION="21.12.7"
+ENV LOOKER_LICENSE_KEY="BE17-BCF6-CAB6-0F89-9D7B"
+ENV LOOKER_LICENSE_EMAIL="deepak.kumar@coupa.com"
 
 ENV PHANTOMJS_VERSION=2.1.1
 
@@ -46,9 +46,19 @@ RUN echo "[INFO]::[configure]::[misc]" \
     && echo "looker     hard     nofile     8192" | tee -a /etc/launchd.conf \
     && echo '%looker ALL=(ALL) NOPASSWD:ALL' | tee -a /etc/sudoers
 
+RUN echo "Looker License Email ${LOOKER_LICENSE_EMAIL}"
 
-COPY config/looker.jar /home/looker/looker/
-COPY config/looker-dependencies.jar /home/looker/looker/
+RUN echo "[INFO]::[download]::[looker]" \
+    && mkdir -p /home/looker/looker \
+    && curl -X POST -H 'Content-Type: application/json' \
+    -d '{"lic": "'$LOOKER_LICENSE_KEY'", "email": "'$LOOKER_LICENSE_EMAIL'", "latest": "latest"}' \
+    https://apidownload.looker.com/download | jq -r '.url' | xargs curl -o /home/looker/looker/looker.jar \
+    && curl -X POST -H 'Content-Type: application/json' \
+    -d '{"lic": "'$LOOKER_LICENSE_KEY'", "email": "'$LOOKER_LICENSE_EMAIL'", "latest": "latest"}' \
+    https://apidownload.looker.com/download | jq -r '.depUrl' | xargs curl -o /home/looker/looker/looker-dependencies.jar
+
+#COPY config/looker.jar /home/looker/looker/
+#COPY config/looker-dependencies.jar /home/looker/looker/
 
 
 RUN set -a && \
