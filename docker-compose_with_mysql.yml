@@ -11,6 +11,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
+      - mysql
       - looker
 
   looker:
@@ -23,3 +24,20 @@ services:
         - LOOKER_VERSION
     volumes:
       - ./data/looker:/srv/data/looker
+    links:
+      - "mysql"
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mariadb
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./data/mysql/data:/var/lib/mysql:rw
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ALLOW_EMPTY_PASSWORD: ${MYSQL_ALLOW_EMPTY_PASSWORD}

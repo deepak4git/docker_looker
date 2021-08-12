@@ -74,7 +74,7 @@ RUN echo "[INFO]::[configure]::[looker]" \
     && chown -R looker:looker /home/looker/looker
 
 # Move in standard entrypoint script and configure to run through TINI for safety.
-COPY bin/docker-entrypoint.sh /entrypoint.sh
+COPY bin/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 ENV TINI_VERSION v0.18.0
