@@ -1,22 +1,37 @@
 #FROM 899991151204.dkr.ecr.us-east-1.amazonaws.com/alpine:latest
 # FROM ubuntu:latest
-FROM 899991151204.dkr.ecr.us-east-1.amazonaws.com/alpine:latest
+FROM 899991151204.dkr.ecr.us-east-1.amazonaws.com/openjdk11:alpine
 # The ubuntu:latest tag points to the "latest LTS"
 # We use Ubuntu Linux (LTS releases) for our internal Looker hosting, and recommend it for customers who do not have a Linux preference.
 USER root
 RUN whoami
-ARG LOOKER_VERSION="21.12.7"
-ARG LOOKER_LICENSE_KEY="BE17-BCF6-CAB6-0F89-9D7B"
-ARG LOOKER_LICENSE_EMAIL="deepak.kumar@coupa.com"
+ENV LOOKER_VERSION="21.12.7"
+ENV LOOKER_LICENSE_KEY="0000-0000-0000-0000-0000"
+ENV LOOKER_LICENSE_EMAIL="no-reply@coupa.com"
 
+ENV PHANTOMJS_VERSION=2.1.1
+
+RUN echo "[INFO]::p[installing]::[phantomjs]" \
+    && apk update \
+    && apk add bash \
+    && apk add --no-cache py-pip py3-setuptools python3-dev \
+    && apk --update add ttf-ubuntu-font-family fontconfig \
+    && apk add --no-cache curl && \
+    cd /tmp && curl -Ls https://github.com/dustinblackman/phantomized/releases/download/${PHANTOMJS_VERSION}/dockerized-phantomjs.tar.gz | tar xz && \
+    cp -R lib lib64 / && \
+    cp -R usr/lib/x86_64-linux-gnu /usr/lib && \
+    cp -R usr/share /usr/share && \
+    cp -R etc/fonts /etc && \
+    curl -k -Ls https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-${PHANTOMJS_VERSION}-linux-x86_64.tar.bz2 | tar -jxf - && \
+    cp phantomjs-${PHANTOMJS_VERSION}-linux-x86_64/bin/phantomjs /usr/local/bin/phantomjs && \
+    rm -fR phantomjs-${PHANTOMJS_VERSION}-linux-x86_64
+    
 RUN echo "[INFO]::[installing]::[base packages]" \
     && ln -snf /usr/share/zoneinfo/America/Los_Angeles /etc/localtime && echo "America/Los_Angeles" > /etc/timezone \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends --no-install-suggests \
-    software-properties-common libssl-dev libmcrypt-dev openssl ca-certificates \
-    git ntp curl tzdata bzip2 libfontconfig1 phantomjs mysql-client sudo jq \
-    fonts-freefont-otf chromium-browser openjdk-8-jdk \
-    && apt-get autoclean && apt-get clean && apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/* \
+    && apk update \
+    && apk add --no-cache libressl-dev libmcrypt-dev ca-certificates \
+    git git openntpd curl tzdata bzip2 libstdc++ libx11 libxrender libxext fontconfig freetype ttf-dejavu ttf-droid \
+    chromium ttf-freefont ttf-ubuntu-font-family ttf-liberation libressl-dev  mysql-client jq \
     && alias chromium='chromium-browser' && sudo ln -s /usr/bin/chromium-browser /usr/bin/chromium
 
 RUN echo "[INFO]::[configure]::[misc]" \
@@ -24,17 +39,27 @@ RUN echo "[INFO]::[configure]::[misc]" \
     && echo "net.ipv4.tcp_keepalive_time=200" | tee -a /etc/sysctl.conf \
     && echo "net.ipv4.tcp_keepalive_intvl=200" | tee -a /etc/sysctl.conf \
     && echo "net.ipv4.tcp_keepalive_probes=5" | tee -a /etc/sysctl.conf \
-    && groupadd -g 1002 "looker" ||  true \
-    && useradd -m  -u 1002 -g "looker" "looker" || true\
+    && addgroup -g 1002 "looker" ||  true \
+    && adduser -u 1002 -S "looker" -G "looker" || true\
     && cp /etc/launchd.conf /etc/launchd.conf.dist || true \
     && echo "limit      maxfiles 8192 8192"     | tee -a /etc/launchd.conf \
     && echo "looker     soft     nofile     8192" | tee -a /etc/launchd.conf \
     && echo "looker     hard     nofile     8192" | tee -a /etc/launchd.conf \
     && echo '%looker ALL=(ALL) NOPASSWD:ALL' | tee -a /etc/sudoers
 
+RUN echo "Looker License Email ${LOOKER_LICENSE_EMAIL}"
 
-COPY config/looker.jar /home/looker/looker/
-COPY config/looker-dependencies.jar /home/looker/looker/
+RUN echo "[INFO]::[download]::[looker]" \
+    && mkdir -p /home/looker/looker \
+    && curl -X POST -H 'Content-Type: application/json' \
+    -d '{"lic": "'$LOOKER_LICENSE_KEY'", "email": "'$LOOKER_LICENSE_EMAIL'", "latest": "latest"}' \
+    https://apidownload.looker.com/download | jq -r '.url' | xargs curl -o /home/looker/looker/looker.jar \
+    && curl -X POST -H 'Content-Type: application/json' \
+    -d '{"lic": "'$LOOKER_LICENSE_KEY'", "email": "'$LOOKER_LICENSE_EMAIL'", "latest": "latest"}' \
+    https://apidownload.looker.com/download | jq -r '.depUrl' | xargs curl -o /home/looker/looker/looker-dependencies.jar
+
+#COPY config/looker.jar /home/looker/looker/
+#COPY config/looker-dependencies.jar /home/looker/looker/
 
 
 RUN set -a && \
@@ -50,7 +75,7 @@ RUN echo "[INFO]::[configure]::[looker]" \
     && chown -R looker:looker /home/looker/looker
 
 # Move in standard entrypoint script and configure to run through TINI for safety.
-COPY bin/docker-entrypoint.sh /entrypoint.sh
+COPY bin/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 ENV TINI_VERSION v0.18.0
