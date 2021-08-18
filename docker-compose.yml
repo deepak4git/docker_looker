@@ -18,8 +18,10 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        - LOOKER_LICENSE_KEY
-        - LOOKER_LICENSE_EMAIL
-        - LOOKER_VERSION
+        LOOKER_LICENSE_KEY: ${LOOKER_LICENSE_KEY}
+        LOOKER_LICENSE_EMAIL: ${LOOKER_LICENSE_EMAIL}
+        LOOKER_VERSION: ${LOOKER_VERSION}
+    environment:
+      LOOKER_DB: ${LOOKER_DB}
     volumes:
       - ./data/looker:/srv/data/looker
