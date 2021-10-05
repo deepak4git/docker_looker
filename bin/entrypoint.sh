@@ -39,15 +39,28 @@ function set_aws_region() {
   WGET_TIMEOUT=1
   AWS_ZONE=$(wget --timeout=$WGET_TIMEOUT http://169.254.169.254/latest/meta-data/placement/availability-zone/ -q -O -)
   check_for_error $? "wget to detect availability zone failed"
-  AWS_REGION=${AWS_ZONE%?}
+  export AWS_REGION=${AWS_ZONE%?}
   entrypoint_log "AWS_REGION=$AWS_REGION"
 }
 
+function set_secret_name(){
+  export SECRET_NAME="dev/analytics/looker_appliance"
+}
 
+function set_looker_db(){
+ RDS_PWD=`aws secretsmanager get-secret-value --secret-id ${SECRET_NAME} --region ${AWS_REGION} | jq .SecretString -r | jq .MYSQL_ROOT_PASSWORD -r`
+ RDS_USER=`aws secretsmanager get-secret-value --secret-id ${SECRET_NAME} --region ${AWS_REGION} | jq .SecretString -r | jq .MYSQL_USER -r`
+ RDS_DB=`aws secretsmanager get-secret-value --secret-id ${SECRET_NAME} --region ${AWS_REGION} | jq .SecretString -r | jq .MYSQL_DATABASE -r`
+ RDS_HOST=`aws secretsmanager get-secret-value --secret-id ${SECRET_NAME} --region ${AWS_REGION} | jq .SecretString -r | jq .MYSQL_HOST -r`
+ export LOOKER_DB="dialect=mysql&host=${RDS_HOST}&username=${RDS_USER}&password=${RDS_PWD}&database=${RDS_DB}&port=3306"
+}
 _HOSTNAME=""
 setHostname
 
 echo "hostname:[${_HOSTNAME}]"
+set_aws_region
+set_secret_name
+set_looker_db
 
 # dynamic looker args created at run time for the container.
 # this is needed for proper clustering.
@@ -80,5 +93,4 @@ echo "Permisssion the volume mount"
 echo "[chown -R looker:looker /srv/data/looker]++++++++++++++++++++++"
 # /srv is owned by root:root out of the box. Add looker:looker /srv/data because Looker expects to write data to this volume
 sudo chown -R looker:looker /srv/data
-
 exec $@
