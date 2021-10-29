@@ -48,14 +48,10 @@ function set_secret_name(){
 }
 
 function set_looker_db(){
- #RDS_PWD=`aws secretsmanager get-secret-value --secret-id ${SECRET_NAME} --region ${AWS_REGION} | jq .SecretString -r | jq .MYSQL_ROOT_PASSWORD -r`
- #RDS_USER=`aws secretsmanager get-secret-value --secret-id ${SECRET_NAME} --region ${AWS_REGION} | jq .SecretString -r | jq .MYSQL_USER -r`
- #RDS_DB=`aws secretsmanager get-secret-value --secret-id ${SECRET_NAME} --region ${AWS_REGION} | jq .SecretString -r | jq .MYSQL_DATABASE -r`
- #RDS_HOST=`aws secretsmanager get-secret-value --secret-id ${SECRET_NAME} --region ${AWS_REGION} | jq .SecretString -r | jq .MYSQL_HOST -r`
- RDS_PWD="lookerpoc#123"
- RDS_USER="admin"
- RDS_DB="looker"
- RDS_HOST="looker-efs.cvzfewnan2km.us-east-1.rds.amazonaws.com"
+ RDS_PWD=`aws secretsmanager get-secret-value --secret-id ${SECRET_NAME} --region ${AWS_REGION} | jq .SecretString -r | jq .MYSQL_ROOT_PASSWORD -r`
+ RDS_USER=`aws secretsmanager get-secret-value --secret-id ${SECRET_NAME} --region ${AWS_REGION} | jq .SecretString -r | jq .MYSQL_USER -r`
+ RDS_DB=`aws secretsmanager get-secret-value --secret-id ${SECRET_NAME} --region ${AWS_REGION} | jq .SecretString -r | jq .MYSQL_DATABASE -r`
+ RDS_HOST=`aws secretsmanager get-secret-value --secret-id ${SECRET_NAME} --region ${AWS_REGION} | jq .SecretString -r | jq .MYSQL_HOST -r`
  export LOOKER_DB="dialect=mysql&host=${RDS_HOST}&username=${RDS_USER}&password=${RDS_PWD}&database=${RDS_DB}&port=3306"
 }
 _HOSTNAME=""
