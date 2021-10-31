@@ -5,19 +5,20 @@ ARG LOOKER_VERSION=""
 ARG LOOKER_LICENSE_KEY=""
 ARG LOOKER_LICENSE_EMAIL=""
 
-ENV LOOKER_VERSION=${LOOKER_VERSION}
+ENV LOOKER_VERSION=${LOOKER_VERSION}-"latest"
 ENV LOOKER_LICENSE_KEY=${LOOKER_LICENSE_KEY}
 ENV LOOKER_LICENSE_EMAIL=${LOOKER_LICENSE_EMAIL}
 
 ENV PHANTOMJS_VERSION=2.1.1
 
-ARG LOOKER_SPECIFIC_VERSION=looker-${LOOKER_VERSION}-latest.jar
-ARG LOOKER_DEPENDENCIES_SPECIFIC_VERSION=looker-dependencies-${LOOKER_VERSION}-latest.jar
+#ARG LOOKER_SPECIFIC_VERSION=looker-${LOOKER_VERSION}-latest.jar
+#ARG LOOKER_DEPENDENCIES_SPECIFIC_VERSION=looker-dependencies-${LOOKER_VERSION}-latest.jar
 
-ENV LOOKER_SPECIFIC_VERSION=${LOOKER_SPECIFIC_VERSION}
+#ENV LOOKER_SPECIFIC_VERSION=${LOOKER_SPECIFIC_VERSION}
+#ENV LOOKER_DEPENDENCIES_SPECIFIC_VERSION=${LOOKER_DEPENDENCIES_SPECIFIC_VERSION}
 
-RUN echo "looker specific version ${LOOKER_SPECIFIC_VERSION}"
-RUN echo "looker dependencies version ${LOOKER_DEPENDENCIES_SPECIFIC_VERSION}"
+#RUN echo "looker specific version ${LOOKER_SPECIFIC_VERSION}"
+#RUN echo "looker dependencies version ${LOOKER_DEPENDENCIES_SPECIFIC_VERSION}"
 
 RUN echo "[INFO]::[installing]::[phantomjs]" \
     && sudo apk update \
@@ -58,15 +59,23 @@ RUN echo "[INFO]::[configure]::[misc]" \
 
 RUN echo "Looker License Email ${LOOKER_LICENSE_EMAIL}"
 
+#RUN echo "[INFO]::[download]::[looker]" \
+#    && sudo mkdir -p /home/looker/looker \
+#    && curl -X POST -H 'Content-Type: application/json' \
+#    -d '{"lic": "'$LOOKER_LICENSE_KEY'", "email": "'$LOOKER_LICENSE_EMAIL'", "latest": "specific", "specific":"'$LOOKER_SPECIFIC_VERSION'"}' \
+#    https://apidownload.looker.com/download | jq -r '.url' | sudo xargs curl -o /home/looker/looker/looker.jar \
+#    && curl -X POST -H 'Content-Type: application/json' \
+#    -d '{"lic": "'$LOOKER_LICENSE_KEY'", "email": "'$LOOKER_LICENSE_EMAIL'", "latest": "specific", "specific":"'LOOKER_DEPENDENCIES_SPECIFIC_VERSION'"}' \
+#    https://apidownload.looker.com/download | jq -r '.depUrl' | sudo xargs curl -o /home/looker/looker/looker-dependencies.jar
+
 RUN echo "[INFO]::[download]::[looker]" \
     && sudo mkdir -p /home/looker/looker \
     && curl -X POST -H 'Content-Type: application/json' \
-    -d '{"lic": "'$LOOKER_LICENSE_KEY'", "email": "'$LOOKER_LICENSE_EMAIL'", "latest": "specific", "specific":"'$LOOKER_SPECIFIC_VERSION'"}' \
-    https://apidownload.looker.com/download | jq -r '.url' | sudo xargs curl -o /home/looker/looker/looker.jar \
-    && curl -X POST -H 'Content-Type: application/json' \
-    -d '{"lic": "'$LOOKER_LICENSE_KEY'", "email": "'$LOOKER_LICENSE_EMAIL'", "latest": "specific", "specific":"looker-dependencies-21.12.59.jar"}' \
-    https://apidownload.looker.com/download | jq -r '.depUrl' | sudo xargs curl -o /home/looker/looker/looker-dependencies.jar
-
+     -d '{"lic": "'"$LOOKER_LICENSE_KEY"'", "email": "'"$LOOKER_LICENSE_EMAIL"'", "latest": "specific", "specific": "looker-'"$LOOKER_VERSION"'.jar"}' \
+    https://apidownload.looker.com/download > /tmp/api_response.json \
+  && cat /tmp/api_response.json && sudo curl "$(cat /tmp/api_response.json | jq -r '.url')" -o  /home/looker/looker/looker.jar \
+  && sudo curl "$(cat /tmp/api_response.json | jq -r '.depUrl')" -o  /home/looker/looker/looker-dependencies.jar
+    
 
 RUN set -a && \
   curl https://raw.githubusercontent.com/looker/customer-scripts/master/startup_scripts/looker | sudo tee -a /home/looker/looker/looker-service
