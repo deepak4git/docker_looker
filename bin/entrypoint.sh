@@ -98,5 +98,5 @@ echo "Permisssion the volume mount"
 
 echo "[chown -R looker:looker /srv/data/looker]++++++++++++++++++++++"
 # /srv is owned by root:root out of the box. Add looker:looker /srv/data because Looker expects to write data to this volume
-chown -R looker:looker /srv/data
+sudo chown -R looker:looker /srv/data
 exec $@

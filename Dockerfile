@@ -5,7 +5,7 @@ ARG LOOKER_VERSION=""
 ARG LOOKER_LICENSE_KEY=""
 ARG LOOKER_LICENSE_EMAIL=""
 
-ENV LOOKER_VERSION=${LOOKER_VERSION}-"latest"
+ENV LOOKER_VERSION=${LOOKER_VERSION}"-latest"
 ENV LOOKER_LICENSE_KEY=${LOOKER_LICENSE_KEY}
 ENV LOOKER_LICENSE_EMAIL=${LOOKER_LICENSE_EMAIL}
 
@@ -38,9 +38,9 @@ RUN echo "[INFO]::[installing]::[base packages]" \
     && sudo ln -snf /usr/share/zoneinfo/America/Los_Angeles /etc/localtime \
     && echo "America/Los_Angeles" | sudo tee -a /etc/timezone \
     && sudo apk update \
-    && sudo apk add --no-cache libressl-dev libmcrypt-dev ca-certificates \
+    && sudo apk add --no-cache libressl-dev ca-certificates \
     git git openntpd curl tzdata bzip2 libstdc++ libx11 libxrender libxext fontconfig freetype ttf-dejavu ttf-droid \
-    chromium openjdk8 ttf-freefont ttf-ubuntu-font-family ttf-liberation libressl-dev  mysql-client jq \
+    chromium openjdk8 ttf-freefont ttf-ubuntu-font-family ttf-liberation mysql-client jq \
     && alias chromium='chromium-browser' && sudo ln -s /usr/bin/chromium-browser /usr/bin/chromium \
     && sudo apk add --no-cache nss
 
@@ -62,10 +62,10 @@ RUN echo "Looker License Email ${LOOKER_LICENSE_EMAIL}"
 #RUN echo "[INFO]::[download]::[looker]" \
 #    && sudo mkdir -p /home/looker/looker \
 #    && curl -X POST -H 'Content-Type: application/json' \
-#    -d '{"lic": "'$LOOKER_LICENSE_KEY'", "email": "'$LOOKER_LICENSE_EMAIL'", "latest": "specific", "specific":"'$LOOKER_SPECIFIC_VERSION'"}' \
+#    -d '{"lic": "'$LOOKER_LICENSE_KEY'", "email": "'$LOOKER_LICENSE_EMAIL'", "latest": "latest"}' \
 #    https://apidownload.looker.com/download | jq -r '.url' | sudo xargs curl -o /home/looker/looker/looker.jar \
 #    && curl -X POST -H 'Content-Type: application/json' \
-#    -d '{"lic": "'$LOOKER_LICENSE_KEY'", "email": "'$LOOKER_LICENSE_EMAIL'", "latest": "specific", "specific":"'LOOKER_DEPENDENCIES_SPECIFIC_VERSION'"}' \
+#    -d '{"lic": "'$LOOKER_LICENSE_KEY'", "email": "'$LOOKER_LICENSE_EMAIL'", "latest": "latest"}' \
 #    https://apidownload.looker.com/download | jq -r '.depUrl' | sudo xargs curl -o /home/looker/looker/looker-dependencies.jar
 
 RUN echo "[INFO]::[download]::[looker]" \
@@ -73,8 +73,8 @@ RUN echo "[INFO]::[download]::[looker]" \
     && curl -X POST -H 'Content-Type: application/json' \
      -d '{"lic": "'"$LOOKER_LICENSE_KEY"'", "email": "'"$LOOKER_LICENSE_EMAIL"'", "latest": "specific", "specific": "looker-'"$LOOKER_VERSION"'.jar"}' \
     https://apidownload.looker.com/download > /tmp/api_response.json \
-  && cat /tmp/api_response.json && sudo curl "$(cat /tmp/api_response.json | jq -r '.url')" -o  /home/looker/looker/looker.jar \
-  && sudo curl "$(cat /tmp/api_response.json | jq -r '.depUrl')" -o  /home/looker/looker/looker-dependencies.jar
+    && cat /tmp/api_response.json && sudo curl "$(cat /tmp/api_response.json | jq -r '.url')" -o  /home/looker/looker/looker.jar \
+    && sudo curl "$(cat /tmp/api_response.json | jq -r '.depUrl')" -o  /home/looker/looker/looker-dependencies.jar
     
 
 RUN set -a && \
